@@ -1,1 +1,1 @@
-web: gunicorn face_api:app
+web: gunicorn --timeout 120 --workers 1 face_api:app
