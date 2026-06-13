@@ -1,0 +1,6 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "apt-get install -y libxcb1 && pip install -r requirements.txt"
+  }
+}
