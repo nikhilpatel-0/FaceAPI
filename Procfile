@@ -1,1 +1,1 @@
-web: gunicorn --timeout 120 --workers 1 face_api:app
+web: pip uninstall -y opencv-python && gunicorn --timeout 120 --workers 1 face_api:app
