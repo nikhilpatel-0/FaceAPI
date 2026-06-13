@@ -1,0 +1,57 @@
+import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import base64
+import numpy as np
+import cv2
+from deepface import DeepFace
+
+app = Flask(__name__)
+CORS(app)
+
+def base64_to_image(base64_string):
+    if "," in base64_string:
+        base64_string = base64_string.split(",")[1]
+
+    img_bytes = base64.b64decode(base64_string)
+    np_arr = np.frombuffer(img_bytes, np.uint8)
+    return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+@app.route("/match-face", methods=["POST"])
+def match_face():
+    try:
+        data = request.get_json()
+
+        probe = base64_to_image(data["probeImage"])
+
+        for person in data["knownFaces"]:
+
+            if not person["EmployeeImage"]:
+                continue
+
+            known = base64_to_image(person["EmployeeImage"])
+
+            result = DeepFace.verify(
+                probe,
+                known,
+                model_name="Facenet",
+                enforce_detection=False
+            )
+
+            print("Match Result:", result)
+
+            if result["verified"]:
+                return jsonify({
+                    "matched": True,
+                    "EmployeeId": person["EmployeeId"],
+                    "EmployeeName": person["EmployeeName"],
+                    "EmployeeMobile": person["EmployeeMobile"]
+                })
+
+        return jsonify({"matched": False})
+
+    except Exception as e:
+        return jsonify({"matched": False, "error": str(e)})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0",port=int(os.environ.get("PORT", 5000)), debug=True)
